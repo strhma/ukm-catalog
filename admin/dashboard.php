@@ -68,7 +68,7 @@ $stmt = $db->prepare($query);
 $stmt->execute();
 $lowStockProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-include '../includes/header.php';
+include '/../../includes/header.php';
 ?>
 
 <div class="container mt-4">
