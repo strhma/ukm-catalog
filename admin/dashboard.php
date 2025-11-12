@@ -268,11 +268,6 @@ include '../includes/header.php';
         <h3>Quick Actions</h3>
         <div class="d-flex flex-wrap gap-2">
             <a href="add-product.php" class="btn btn-success">➕ Add Product</a>
-            <a href="add-category.php" class="btn btn-info">➕ Add Category</a>
-            <a href="users.php" class="btn btn-primary">👥 Manage Users</a>
-            <a href="reports.php" class="btn btn-warning">📊 Reports</a>
-            <a href="export.php" class="btn btn-secondary">📥 Export Data</a>
-            <a href="settings.php" class="btn btn-dark">⚙️ Settings</a>
         </div>
     </div>
 </div>
