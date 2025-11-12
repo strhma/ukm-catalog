@@ -465,7 +465,7 @@ class CartManager {
 }
 
 // Initialize debugger
-debugger = new UKMDebugger();
+debugger ; new UKMDebugger();
 
 // Utility functions
 function debounce(func, wait) {
@@ -496,5 +496,4 @@ style.textContent = `
 document.head.appendChild(style);
 
 console.log('UKM Catalog Debug System Loaded');
-console.log('Debug Mode:', debugger.debugMode);
 console.log('Press Ctrl+Shift+D to toggle debug panel');
