@@ -68,16 +68,12 @@ $stmt = $db->prepare($query);
 $stmt->execute();
 $lowStockProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-include '/../../includes/header.php';
+include '../includes/header.php';
 ?>
-
+<link rel="stylesheet" href="../assets/css/style.css">
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Admin Dashboard</h1>
-        <div class="d-flex gap-2">
-            <a href="../index.php" class="btn btn-secondary">View Site</a>
-            <a href="settings.php" class="btn btn-warning">Settings</a>
-        </div>
     </div>
     
     <?php displayFlashMessage(); ?>
@@ -189,7 +185,6 @@ include '/../../includes/header.php';
                                     <th>Category</th>
                                     <th>Price</th>
                                     <th>Stock</th>
-                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -215,9 +210,6 @@ include '/../../includes/header.php';
                                             <span class="badge badge-<?php echo $product['stock'] <= 5 ? 'warning' : 'success'; ?>">
                                                 <?php echo $product['stock']; ?>
                                             </span>
-                                        </td>
-                                        <td>
-                                            <a href="../product-detail.php?id=<?php echo $product['id']; ?>" class="btn btn-info btn-sm">View</a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

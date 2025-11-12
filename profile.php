@@ -1,5 +1,5 @@
 <?php
-require_once 'config/config.php';
+require_once '../config/config.php';
 
 $auth = new Auth($db);
 $auth->requireLogin();
@@ -25,9 +25,9 @@ $stmt = $db->prepare($query);
 $stmt->execute([$_SESSION['user_id']]);
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-include 'includes/header.php';
+include '../includes/header.php';
 ?>
-
+<link rel="stylesheet" href="../assets/css/style.css">
 <div class="container mt-4">
     <h1 class="text-center mb-4">Profil Saya</h1>
     
@@ -80,114 +80,6 @@ include 'includes/header.php';
                     <a href="change-password.php" class="btn btn-warning">Ganti Password</a>
                 </div>
             </div>
-            
-            <!-- Quick Stats -->
-            <div style="min-width: 250px;">
-                <h3>Statistik</h3>
-                <div class="dashboard-stats" style="grid-template-columns: 1fr;">
-                    <div class="stat-card">
-                        <div class="stat-number"><?php echo count($orders); ?></div>
-                        <div class="stat-label">Total Pesanan</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">
-                            <?php
-                            $completedOrders = array_filter($orders, function($order) {
-                                return $order['status'] === 'completed';
-                            });
-                            echo count($completedOrders);
-                            ?>
-                        </div>
-                        <div class="stat-label">Pesanan Selesai</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">
-                            <?php
-                            $totalSpent = array_sum(array_map(function($order) {
-                                return $order['status'] === 'completed' ? $order['total_amount'] : 0;
-                            }, $orders));
-                            echo formatRupiah($totalSpent);
-                            ?>
-                        </div>
-                        <div class="stat-label">Total Belanja</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Recent Orders -->
-    <div class="form-container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3>Pesanan Terakhir</h3>
-            <a href="orders.php" class="btn btn-info">Lihat Semua Pesanan</a>
-        </div>
-        
-        <?php if (empty($orders)): ?>
-            <div class="text-center py-4">
-                <p class="text-muted">Anda belum memiliki pesanan</p>
-                <a href="products.php" class="btn btn-primary">Mulai Belanja</a>
-            </div>
-        <?php else: ?>
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Nomor Pesanan</th>
-                            <th>Tanggal</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Item</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($orders as $order): ?>
-                            <tr>
-                                <td><strong><?php echo htmlspecialchars($order['order_number']); ?></strong></td>
-                                <td><?php echo date('d/m/Y', strtotime($order['created_at'])); ?></td>
-                                <td><?php echo formatRupiah($order['total_amount']); ?></td>
-                                <td>
-                                    <?php 
-                                    $statusLabels = [
-                                        'pending' => 'Menunggu Pembayaran',
-                                        'processing' => 'Diproses',
-                                        'completed' => 'Selesai',
-                                        'cancelled' => 'Dibatalkan'
-                                    ];
-                                    $statusColors = [
-                                        'pending' => 'warning',
-                                        'processing' => 'info',
-                                        'completed' => 'success',
-                                        'cancelled' => 'danger'
-                                    ];
-                                    ?>
-                                    <span class="badge badge-<?php echo $statusColors[$order['status']]; ?>">
-                                        <?php echo $statusLabels[$order['status']]; ?>
-                                    </span>
-                                </td>
-                                <td><?php echo $order['total_items']; ?> item</td>
-                                <td>
-                                    <a href="order-detail.php?id=<?php echo $order['id']; ?>" class="btn btn-primary btn-sm">Detail</a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php endif; ?>
-    </div>
-    
-    <!-- Quick Actions -->
-    <div class="form-container mt-5">
-        <h3 class="mb-4">Aksi Cepat</h3>
-        <div class="d-flex flex-wrap gap-2">
-            <a href="products.php" class="btn btn-primary">Lanjut Belanja</a>
-            <a href="cart.php" class="btn btn-secondary">Lihat Keranjang</a>
-            <a href="wishlist.php" class="btn btn-info">Wishlist</a>
-            <?php if ($user['role'] === 'admin'): ?>
-                <a href="admin/dashboard.php" class="btn btn-danger">Admin Dashboard</a>
-            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -216,4 +108,4 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<?php include 'includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>

@@ -12,18 +12,26 @@
     <header class="header">
         <div class="container">
             <div class="header-content">
-                <a href="<?php echo BASE_URL; ?>" class="logo">UKM Catalog</a>
+                <a href="<?php echo BASE_URL; ?>index.php" class="logo">UKM Catalog</a>
                 <nav class="nav">
-                    <a href="<?php echo BASE_URL; ?>">Home</a>
+                    <!-- Tampilkan Home hanya untuk user biasa atau guest -->
+                    <?php if (!isset($auth) || !$auth->isLoggedIn() || (isset($auth) && $auth->isLoggedIn() && !$auth->hasRole('admin'))): ?>
+                        <a href="<?php echo BASE_URL; ?>index.php">Home</a>
+                    <?php endif; ?>
+                    
                     <a href="<?php echo BASE_URL; ?>products.php">Products</a>
-                    <a href="<?php echo BASE_URL; ?>cart.php">
-                        Cart
-                        <span class="cart-count" style="display: none;">0</span>
-                    </a>
+                    
+                    <!-- Tampilkan Cart hanya untuk user biasa atau guest -->
+                    <?php if (!isset($auth) || !$auth->isLoggedIn() || (isset($auth) && $auth->isLoggedIn() && !$auth->hasRole('admin'))): ?>
+                        <a href="<?php echo BASE_URL; ?>cart.php">
+                            Cart
+                            <span class="cart-count" style="display: none;">0</span>
+                        </a>
+                    <?php endif; ?>
                     
                     <?php if (isset($auth) && $auth->isLoggedIn()): ?>
                         <?php if ($auth->hasRole('admin')): ?>
-                            <a href="<?php echo BASE_URL; ?>admin/dashboard.php">Admin</a>
+                            <a href="<?php echo BASE_URL; ?>dashboard.php">Admin Dashboard</a>
                         <?php endif; ?>
                         <a href="<?php echo BASE_URL; ?>profile.php">Profile</a>
                         <a href="<?php echo BASE_URL; ?>logout.php">Logout</a>

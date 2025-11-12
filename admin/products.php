@@ -126,7 +126,7 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 include '../includes/header.php';
 ?>
-
+<link rel="stylesheet" href="../assets/css/style.css">
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Manage Products</h1>
