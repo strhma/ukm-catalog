@@ -236,17 +236,6 @@ Pastikan untuk selalu update PHP dan MySQL ke versi terbaru untuk keamanan.
 4. Push to branch
 5. Create Pull Request
 
-## License
-
-This project is licensed under the MIT License.
-
-## Support
-
-Untuk pertanyaan atau masalah:
-- Email: support@ukmcatalog.com
-- Documentation: [Link ke dokumentasi lengkap]
-- Issues: [GitHub Issues]
-
 ## Changelog
 
 ### v1.0.0 (Initial Release)
