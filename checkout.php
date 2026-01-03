@@ -23,6 +23,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $shippingAddress = sanitizeInput($_POST['shipping_address']);
     $notes = sanitizeInput($_POST['notes'] ?? '');
     $paymentMethod = sanitizeInput($_POST['payment_method']);
+    
+    // RajaOngkir Data
+    $provinceId = isset($_POST['province']) ? intval($_POST['province']) : 0;
+    $cityId = isset($_POST['city']) ? intval($_POST['city']) : 0;
+    $courier = isset($_POST['courier']) ? sanitizeInput($_POST['courier']) : '';
+    $shippingCost = isset($_POST['shipping_cost']) ? floatval($_POST['shipping_cost']) : 0;
+    $shippingService = isset($_POST['shipping_service']) ? sanitizeInput($_POST['shipping_service']) : '';
 
     // Validation
     $errors = [];
@@ -41,6 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (empty($shippingAddress)) {
         $errors[] = 'Alamat pengiriman diperlukan';
+    }
+
+    if (empty($provinceId) || empty($cityId) || empty($courier) || empty($shippingService)) {
+        $errors[] = 'Silakan pilih layanan pengiriman lengkap (Provinsi, Kota, Kurir)';
     }
 
     // Get cart items
@@ -64,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Validate stock
             $totalAmount = 0;
+            $totalWeight = 0; // Total weight in grams
             $orderItems = [];
             
             foreach ($products as $product) {
@@ -75,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $subtotal = $product['price'] * $quantity;
                 $totalAmount += $subtotal;
+                $totalWeight += ($product['weight'] ?? 1000) * $quantity; // Default 1kg if not set
                 
                 $orderItems[] = [
                     'product_id' => $product['id'],
@@ -83,6 +96,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'subtotal' => $subtotal
                 ];
             }
+            
+            // Verify Shipping Cost (Server-Side)
+            $totalAmount += $shippingCost; // Add shipping to total
             
             // Create customer record
             $query = "INSERT INTO customers (user_id, name, email, phone, address, created_at) 
@@ -101,15 +117,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $orderNumber = 'ORD' . date('YmdHis') . str_pad($customerId, 4, '0', STR_PAD_LEFT);
             
             // Create order
-            $query = "INSERT INTO orders (customer_id, order_number, total_amount, status, shipping_address, notes, created_at) 
-                      VALUES (?, ?, ?, 'pending', ?, ?, NOW())";
+            $query = "INSERT INTO orders (customer_id, order_number, total_amount, status, shipping_address, notes, shipping_cost, courier, shipping_service, created_at) 
+                      VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, ?, NOW())";
             $stmt = $db->prepare($query);
             $stmt->execute([
                 $customerId,
                 $orderNumber,
                 $totalAmount,
                 $shippingAddress,
-                $notes
+                $notes,
+                $shippingCost,
+                $courier,
+                $shippingService
             ]);
             $orderId = $db->lastInsertId();
             
@@ -151,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Success message and redirect
             setFlashMessage('success', "Pesanan #{$orderNumber} berhasil dibuat! Silakan lakukan pembayaran.");
-            header('Location: order-success.php?order_id=' . $orderId);
+            header('Location: ' . BASE_URL . 'order-success.php?order_id=' . $orderId);
             exit();
             
         } catch (Exception $e) {
@@ -285,7 +304,7 @@ include 'includes/header.php';
         </div>
         
         <!-- Checkout Form -->
-        <form method="POST" class="needs-validation" novalidate>
+        <form action="checkout.php" method="POST" class="needs-validation" novalidate>
             <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
             
             <h3>Informasi Pembeli</h3>
@@ -312,6 +331,42 @@ include 'includes/header.php';
                 <textarea class="form-control" id="shipping_address" name="shipping_address" rows="3" required 
                           placeholder="Masukkan alamat lengkap pengiriman..."></textarea>
             </div>
+            
+            <!-- RajaOngkir Selectors -->
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label>Provinsi</label>
+                    <select class="form-control" id="province" name="province" required>
+                        <option value="">Pilih Provinsi...</option>
+                    </select>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label>Kota/Kabupaten</label>
+                    <select class="form-control" id="city" name="city" required disabled>
+                        <option value="">Pilih Kota...</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label>Kurir</label>
+                    <select class="form-control" id="courier" name="courier" required disabled>
+                        <option value="">Pilih Kurir...</option>
+                        <option value="jne">JNE</option>
+                        <option value="pos">POS Indonesia</option>
+                        <option value="tiki">TIKI</option>
+                    </select>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label>Layanan Pengiriman</label>
+                    <select class="form-control" id="shipping_service" name="shipping_service" required disabled>
+                        <option value="">Pilih Layanan...</option>
+                    </select>
+                </div>
+            </div>
+            
+            <input type="hidden" name="shipping_cost" id="shipping_cost" value="0">
             
             <div class="form-group">
                 <label for="notes">Catatan Tambahan (Opsional)</label>
@@ -345,11 +400,11 @@ include 'includes/header.php';
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span>Biaya Pengiriman:</span>
-                    <span>Gratis</span>
+                    <span id="display_shipping_cost">Rp 0</span>
                 </div>
                 <div class="d-flex justify-content-between mb-3" style="font-size: 1.2rem; font-weight: bold;">
                     <span>Total Pembayaran:</span>
-                    <span style="color: #3742fa;"><?php echo formatRupiah($totalAmount); ?></span>
+                    <span style="color: #3742fa;" id="display_total_amount"><?php echo formatRupiah($totalAmount); ?></span>
                 </div>
                 
                 <div class="d-flex gap-2">
@@ -479,6 +534,136 @@ document.addEventListener('DOMContentLoaded', function() {
         defaultPayment.dispatchEvent(new Event('change'));
     }
 });
+    const baseTotal = <?php echo $totalAmount; ?>;
+    
+    // RajaOngkir Logic
+    const provinceSelect = document.getElementById('province');
+    const citySelect = document.getElementById('city');
+    const courierSelect = document.getElementById('courier');
+    const serviceSelect = document.getElementById('shipping_service');
+    const shippingCostInput = document.getElementById('shipping_cost');
+    const displayShippingCost = document.getElementById('display_shipping_cost');
+    const displayTotalAmount = document.getElementById('display_total_amount');
+    
+    // Load Provinces
+    fetch('api/rajaongkir/provinces.php')
+        .then(response => response.json())
+        .then(res => {
+            if (res.success) {
+                res.data.forEach(prov => {
+                    const option = document.createElement('option');
+                    option.value = prov.province_id;
+                    option.textContent = prov.province;
+                    provinceSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(err => console.error('Error loading provinces:', err));
+        
+    // Load Cities when Province changes
+    provinceSelect.addEventListener('change', function() {
+        citySelect.innerHTML = '<option value="">Pilih Kota...</option>';
+        citySelect.disabled = true;
+        courierSelect.disabled = true;
+        serviceSelect.innerHTML = '<option value="">Pilih Layanan...</option>';
+        serviceSelect.disabled = true;
+        updateTotals(0);
+        
+        if (this.value) {
+            fetch(`api/rajaongkir/cities.php?province_id=${this.value}`)
+                .then(response => response.json())
+                .then(res => {
+                    if (res.success) {
+                        res.data.forEach(city => {
+                            const option = document.createElement('option');
+                            option.value = city.city_id;
+                            option.textContent = `${city.type} ${city.city_name}`;
+                            citySelect.appendChild(option);
+                        });
+                        citySelect.disabled = false;
+                    }
+                });
+        }
+    });
+    
+    // Enable Courier when City selected
+    citySelect.addEventListener('change', function() {
+        if (this.value) {
+            courierSelect.disabled = false;
+        } else {
+            courierSelect.disabled = true;
+        }
+        serviceSelect.innerHTML = '<option value="">Pilih Layanan...</option>';
+        serviceSelect.disabled = true;
+        updateTotals(0);
+    });
+    
+    // Calculate Cost when Courier selected
+    courierSelect.addEventListener('change', function() {
+        serviceSelect.innerHTML = '<option value="">Loading...</option>';
+        serviceSelect.disabled = true;
+        updateTotals(0);
+        
+        if (this.value && citySelect.value) {
+            fetch('api/rajaongkir/cost.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    destination: citySelect.value,
+                    courier: this.value,
+                    weight: 1000 // Default 1kg for now
+                })
+            })
+            .then(response => response.json())
+            .then(res => {
+                serviceSelect.innerHTML = '<option value="">Pilih Layanan...</option>';
+                if (res.success && res.data[0].costs.length > 0) {
+                    res.data[0].costs.forEach(cost => {
+                        const option = document.createElement('option');
+                        const serviceName = cost.service;
+                        const price = cost.cost[0].value;
+                        const etd = cost.cost[0].etd;
+                        
+                        option.value = serviceName;
+                        option.textContent = `${serviceName} - ${formatRupiah(price)} (Est: ${etd} hari)`;
+                        option.dataset.price = price;
+                        serviceSelect.appendChild(option);
+                    });
+                    serviceSelect.disabled = false;
+                } else {
+                    serviceSelect.innerHTML = '<option value="">Tidak ada layanan tersedia</option>';
+                    if (res.message) alert(res.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                serviceSelect.innerHTML = '<option value="">Error fetching costs</option>';
+            });
+        }
+    });
+
+    // Update totals when Service selected
+    serviceSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const price = selectedOption.dataset.price ? parseInt(selectedOption.dataset.price) : 0;
+        updateTotals(price);
+    });
+    
+    function updateTotals(shippingPrice) {
+        shippingCostInput.value = shippingPrice;
+        displayShippingCost.textContent = formatRupiah(shippingPrice);
+        
+        const total = baseTotal + shippingPrice;
+        displayTotalAmount.textContent = formatRupiah(total);
+    }
+    
+    function formatRupiah(number) {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0
+        }).format(number);
+    }
 </script>
 
 <?php include 'includes/footer.php'; ?>

@@ -95,6 +95,11 @@ define('FEATURE_CART_ENABLED', true);
 define('FEATURE_REVIEWS_ENABLED', false);
 define('FEATURE_WISHLIST_ENABLED', false);
 
+// RajaOngkir Configuration
+define('RAJAONGKIR_API_KEY', 'YOUR_API_KEY_HERE'); // Masukkan API Key RajaOngkir di sini
+define('RAJAONGKIR_BASE_URL', 'https://api.rajaongkir.com/starter');
+define('ORIGIN_CITY_ID', '152'); // Default: Jakarta Pusat (Sesuaikan dengan toko Anda)
+
 // Load required files
 try {
     // Load database configuration

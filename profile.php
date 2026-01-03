@@ -1,5 +1,5 @@
 <?php
-require_once '../config/config.php';
+require_once 'config/config.php';
 
 $auth = new Auth($db);
 $auth->requireLogin();
@@ -25,9 +25,9 @@ $stmt = $db->prepare($query);
 $stmt->execute([$_SESSION['user_id']]);
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-include '../includes/header.php';
+include 'includes/header.php';
 ?>
-<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="assets/css/style.css">
 <div class="container mt-4">
     <h1 class="text-center mb-4">Profil Saya</h1>
     
@@ -108,4 +108,4 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<?php include '../includes/footer.php'; ?>
+<?php include 'includes/footer.php'; ?>

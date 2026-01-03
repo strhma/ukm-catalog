@@ -31,7 +31,9 @@
                     
                     <?php if (isset($auth) && $auth->isLoggedIn()): ?>
                         <?php if ($auth->hasRole('admin')): ?>
-                            <a href="<?php echo BASE_URL; ?>dashboard.php">Admin Dashboard</a>
+                            <a href="<?php echo BASE_URL; ?>admin/dashboard.php">Admin Dashboard</a>
+                        <?php else: ?>
+                            <a href="<?php echo BASE_URL; ?>orders.php">Pesanan Saya</a>
                         <?php endif; ?>
                         <a href="<?php echo BASE_URL; ?>profile.php">Profile</a>
                         <a href="<?php echo BASE_URL; ?>logout.php">Logout</a>
